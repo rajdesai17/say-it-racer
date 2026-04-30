@@ -1,53 +1,49 @@
 "use client";
 
-import { useState } from "react";
-
 type Props = {
-  word: string;
-  voiceId: string;
+  audioUrl: string | null;
   onUsed: () => void;
   used: boolean;
+  onPlayStart?: () => void;
+  onPlayEnd?: () => void;
 };
 
-export default function HearItButton({ word, voiceId, onUsed, used }: Props) {
-  const [loading, setLoading] = useState(false);
+export default function HearItButton({
+  audioUrl,
+  onUsed,
+  used,
+  onPlayStart,
+  onPlayEnd,
+}: Props) {
+  const ready = !!audioUrl;
 
-  const play = async () => {
-    if (used || loading) return;
-    setLoading(true);
+  const play = () => {
+    if (used || !audioUrl) return;
     onUsed();
-    try {
-      const res = await fetch("/api/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word, voiceId }),
-      });
-      if (!res.ok) throw new Error("TTS failed");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
-      await audio.play();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    const audio = new Audio(audioUrl);
+    audio.onended = () => onPlayEnd?.();
+    audio.onerror = () => onPlayEnd?.();
+    onPlayStart?.();
+    audio.play().catch(() => onPlayEnd?.());
   };
+
+  const label = !ready ? "Loading…" : used ? "Heard It" : "🔊 Hear It";
 
   return (
     <button
       onClick={play}
-      disabled={used || loading}
+      disabled={used || !ready}
       className={`px-5 py-3 rounded-xl text-sm font-semibold tracking-wide transition-all
         ${used
           ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-          : "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+          : ready
+            ? "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+            : "bg-zinc-800 text-zinc-500 cursor-wait"
         }
         disabled:opacity-50`}
       aria-label="Hear correct pronunciation"
     >
-      {loading ? "Loading\u2026" : used ? "Heard It" : "\uD83D\uDD0A Hear It"}
+      {label}
     </button>
   );
 }
