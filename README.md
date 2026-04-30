@@ -1,16 +1,54 @@
-# Say It — Pronunciation Game
+# Say It Racer
 
-A browser-based pronunciation game built with Next.js. Players are shown words from several languages, hold the microphone button to say the word aloud, and receive pronunciation feedback using ElevenLabs speech-to-text. A "Hear It" button can play the correct pronunciation using ElevenLabs text-to-speech.
+**Say It Racer** is a fast, arcade-style pronunciation game built for the **Zed × ElevenLabs game challenge / #ElevenHacks**. The player races through a 10-word multilingual pronunciation course, speaks each word into the microphone, and gets instant AI-powered feedback.
+
+The twist: you can tap **Hear It** to hear the correct pronunciation, but using the hint lowers your score. Clean pronunciation, quick reactions, and no-hint streaks are the fastest way to reach the perfect score.
+
+## Hackathon Pitch
+
+This project was built for the challenge to create a polished game experience with **Zed** and **ElevenLabs APIs**.
+
+- **Zed** was used as the high-performance, AI-assisted development environment for rapidly building and refining the game.
+- **ElevenLabs Speech-to-Text** powers the pronunciation check after each spoken attempt.
+- **ElevenLabs Text-to-Speech** powers the optional pronunciation hint so the player can hear the target word before trying again.
+
+The result is a compact, replayable game where audio is not just decoration — it is the core mechanic.
+
+## What You Do
+
+1. A word appears on the road.
+2. Hold the mic button and say it out loud.
+3. ElevenLabs transcribes your speech.
+4. The game checks whether your pronunciation matches the target word.
+5. If you get stuck, use **Hear It** to hear the correct pronunciation.
+6. Chase a perfect no-hint score before the round ends.
+
+## Why It Fits the Challenge
+
+The challenge asks for smaller, polished game experiences where audio creates emotion, immersion, or delight. **Say It Racer** keeps the scope focused and makes voice interaction the heart of the game:
+
+- The player has to speak to progress.
+- The game gives immediate feedback through speech recognition.
+- TTS hints make the game more approachable while creating a meaningful scoring tradeoff.
+- The moving-road visual style gives a simple arcade rhythm that works well for a short viral gameplay clip.
 
 ## Features
 
-- Random 10-word pronunciation rounds
-- Words across French, German, Spanish, Japanese, Arabic, and English
-- Microphone recording from the browser
+- 10-word randomized pronunciation rounds
+- Words from French, German, Spanish, Japanese, Arabic, and English
+- Browser microphone recording
 - ElevenLabs speech-to-text pronunciation checks
 - ElevenLabs text-to-speech pronunciation hints
-- Score, streak, and bonus-point tracking
+- Streaks, bonus points, and perfect-score chasing
+- Animated road background for an arcade feel
 - Copyable end-of-game scorecard
+
+## Scoring
+
+- Correct without using **Hear It**: **3 points**
+- Correct after using **Hear It**: **1 point**
+- Every 3-answer no-hint streak: **+2 bonus points**
+- Perfect score: **36 points**
 
 ## Tech Stack
 
@@ -20,6 +58,34 @@ A browser-based pronunciation game built with Next.js. Players are shown words f
 - [ElevenLabs](https://elevenlabs.io/) API
 - [natural](https://www.npmjs.com/package/natural) for phonetic fallback matching
 - TypeScript
+
+## ElevenLabs Integration
+
+### Speech-to-Text
+
+`/api/transcribe` accepts browser-recorded audio and sends it to ElevenLabs speech-to-text. The returned transcript is compared against the target word using exact, partial, and phonetic matching.
+
+### Text-to-Speech
+
+`/api/speak` generates an audio pronunciation of the displayed word using ElevenLabs text-to-speech. This powers the **Hear It** hint button.
+
+## Project Structure
+
+```text
+app/
+  api/
+    speak/route.ts       # ElevenLabs text-to-speech endpoint
+    transcribe/route.ts  # ElevenLabs speech-to-text endpoint
+  game/page.tsx          # Main game UI and state
+components/
+  HearItButton.tsx       # Plays correct pronunciation
+  MicButton.tsx          # Records and submits microphone audio
+  Road.tsx               # Animated road background
+  WordCard.tsx           # Displays the current word
+lib/
+  phonetic.ts            # Transcript/word matching logic
+  words.ts               # Word list and random selection
+```
 
 ## Requirements
 
@@ -42,7 +108,7 @@ Add your ElevenLabs API key:
 ELEVENLABS_API_KEY=your_api_key_here
 ```
 
-Do not commit `.env.local` or any real API keys. The project `.gitignore` already ignores `.env*` files.
+Do not commit `.env.local` or any real API keys. This repo's `.gitignore` ignores `.env*` files.
 
 ## Getting Started
 
@@ -80,7 +146,7 @@ Builds the app for production.
 npm run start
 ```
 
-Starts the production server after a build.
+Starts the production server after a production build.
 
 ```bash
 npm run lint
@@ -88,22 +154,17 @@ npm run lint
 
 Runs ESLint.
 
-## How the Game Works
+## Submission Notes
 
-1. The app randomly selects 10 words from `lib/words.ts`.
-2. The player holds the microphone button and says the displayed word.
-3. The recording is sent to `/api/transcribe`.
-4. The server sends the audio to ElevenLabs speech-to-text.
-5. The returned transcript is compared against the target word in `lib/phonetic.ts`.
-6. Correct answers advance to the next word and award points.
-7. The player can use "Hear It" to play the correct pronunciation through `/api/speak`.
+For the Zed × ElevenLabs challenge, the gameplay video should focus on:
 
-## Scoring
+- The mic interaction: hold, speak, release
+- The ElevenLabs transcription feedback loop
+- The **Hear It** TTS hint and score tradeoff
+- The tension of maintaining a no-hint streak
+- The final scorecard
 
-- Correct without using "Hear It": 3 points
-- Correct after using "Hear It": 1 point
-- Every 3-answer no-hint streak: +2 bonus points
-- Maximum displayed score: 36 points
+When posting the submission, tag **@zeddotdev** and **@elevenlabsio** and use **#ElevenHacks**.
 
 ## Important Deployment Notes
 
@@ -127,25 +188,7 @@ Without those protections, a public deployment could allow others to consume you
 - Failed pronunciations currently keep the player on the same word rather than recording a failed result.
 - Microphone permission or network failures may not show detailed user-facing errors.
 - Scores are client-side and should not be treated as tamper-proof.
-- The pronunciation matcher is simple and may be imperfect for non-Latin or accented words.
-
-## Project Structure
-
-```text
-app/
-  api/
-    speak/route.ts       # ElevenLabs text-to-speech endpoint
-    transcribe/route.ts  # ElevenLabs speech-to-text endpoint
-  game/page.tsx          # Main game UI and state
-components/
-  HearItButton.tsx       # Plays correct pronunciation
-  MicButton.tsx          # Records and submits microphone audio
-  Road.tsx               # Animated background
-  WordCard.tsx           # Displays the current word
-lib/
-  phonetic.ts            # Transcript/word matching logic
-  words.ts               # Word list and random selection
-```
+- The pronunciation matcher is intentionally lightweight and may be imperfect for non-Latin or accented words.
 
 ## Troubleshooting
 
@@ -179,4 +222,4 @@ npm install
 
 ## License
 
-Private project.
+Private project / hackathon submission.
