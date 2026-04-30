@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useScribe, CommitStrategy } from "@elevenlabs/react";
 import { AnimatePresence, motion } from "motion/react";
-import { pickRandomWords, Word } from "@/lib/words";
+import { pickRandomWords, toIso1, Word } from "@/lib/words";
 import { pronunciationMatch } from "@/lib/phonetic";
 import Road from "@/components/Road";
 import WordCard from "@/components/WordCard";
@@ -149,33 +149,47 @@ export default function GamePage() {
     onAuthError,
   });
 
+  const lastLangRef = useRef<string | null>(null);
   useEffect(() => {
-    if (words.length === 0) return;
+    if (!currentWord) return;
+    const lang = toIso1(currentWord.languageCode);
+    if (lastLangRef.current === lang && scribe.isConnected) return;
+
     let cancelled = false;
     (async () => {
       try {
+        scribe.disconnect();
         const res = await fetch("/api/scribe-token");
         if (!res.ok) throw new Error("Token mint failed");
         const { token } = await res.json();
         if (cancelled) return;
         await scribe.connect({
           token,
+          languageCode: lang,
+          keyterms: [currentWord.word],
           microphone: {
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true,
           },
         });
+        lastLangRef.current = lang;
       } catch (e) {
-        setMicError((e as Error).message);
+        if (!cancelled) setMicError((e as Error).message);
       }
     })();
     return () => {
       cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentWord]);
+
+  useEffect(() => {
+    return () => {
       scribe.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [words.length]);
+  }, []);
 
   const copyScore = () => {
     const lines = results.map(

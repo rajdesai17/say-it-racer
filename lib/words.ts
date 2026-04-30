@@ -6,6 +6,19 @@ export type Word = {
   englishMeaning: string;
 };
 
+const ISO3_TO_ISO1: Record<string, string> = {
+  fra: "fr",
+  deu: "de",
+  spa: "es",
+  jpn: "ja",
+  ara: "ar",
+  eng: "en",
+};
+
+export function toIso1(code: string): string {
+  return ISO3_TO_ISO1[code] ?? code;
+}
+
 const GEORGE = "JBFqnCBsd6RMkjVDRZzb";
 const JESSICA = "cgSgspJ2msm6clMCkdW9";
 

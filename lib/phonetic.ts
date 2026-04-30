@@ -3,9 +3,7 @@ function normalize(s: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9\s]/g, "")
-    .trim()
-    .replace(/\s+/g, " ");
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function levenshtein(a: string, b: string): number {
@@ -28,6 +26,8 @@ function levenshtein(a: string, b: string): number {
   return dp[b.length];
 }
 
+const stripVowels = (s: string) => s.replace(/[aeiou]/g, "");
+
 export function pronunciationMatch(
   transcript: string,
   target: string,
@@ -37,7 +37,18 @@ export function pronunciationMatch(
   if (!t || !w) return false;
   if (t === w) return true;
   if (t.includes(w) || w.includes(t)) return true;
+
   const dist = levenshtein(t, w);
-  const threshold = Math.max(1, Math.floor(w.length * 0.25));
-  return dist <= threshold;
+  const threshold = Math.max(2, Math.ceil(w.length * 0.4));
+  if (dist <= threshold) return true;
+
+  const tc = stripVowels(t);
+  const wc = stripVowels(w);
+  if (tc && wc) {
+    if (tc === wc) return true;
+    const consonantDist = levenshtein(tc, wc);
+    if (consonantDist <= Math.max(1, Math.ceil(wc.length * 0.34))) return true;
+  }
+
+  return false;
 }
